@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="tr" data-view="cocuk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kuka Oyun Evi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat+Brush&family=Atkinson+Hyperlegible:wght@400;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  color-scheme: light;
+  --paper:#FFE6A3; --card:#FFF6DA; --ink:#1F2A6B; --soft:#4A5490;
+  --red:#E8505B; --green:#2FA678; --sky:#7FCBEA; --sun:#FFC93C;
+  --door:#E8505B; --light:#FFF1B0; --line:#1F2A6B;
+}
+html[data-view="ebeveyn"]{
+  --paper:#EDF3F6; --card:#FFFFFF; --ink:#1F2A6B; --soft:#55607F;
+  --red:#C9606A; --green:#4F9C84; --sky:#A9D2E6; --sun:#F2C14E;
+  --door:#3E7CA6; --light:#FFE7A0;
+}
+@media (prefers-color-scheme: dark){
+  :root{
+    color-scheme: dark;
+    --paper:#18225A; --card:#222E72; --ink:#FFF3D1; --soft:#C9CDF0;
+    --red:#FF7A82; --green:#5ED3A6; --sky:#5B9FD0; --sun:#FFD35C;
+    --door:#FF7A82; --light:#FFE58A; --line:#FFF3D1;
+  }
+  html[data-view="ebeveyn"]{
+    --paper:#111933; --card:#1A2547; --ink:#E9EEF7; --soft:#AEB8D3;
+    --red:#E08990; --green:#7CC3AC; --sky:#3F6C8F; --sun:#F2C14E;
+    --door:#6FA8D0; --light:#FFE29A; --line:#E9EEF7;
+  }
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:var(--paper); color:var(--ink);
+  font:400 1.0625rem/1.6 "Atkinson Hyperlegible",system-ui,sans-serif;
+  transition:background .5s, color .5s;
+}
+h1,h2,h3,.hand{font-family:"Caveat Brush",cursive;font-weight:400;line-height:1.05}
+a{color:inherit}
+:focus-visible{outline:3px dashed var(--red);outline-offset:4px;border-radius:6px}
+img,svg{display:block;max-width:100%}
+
+/* Görünüm değiştirme */
+html[data-view="cocuk"] .p{display:none!important}
+html[data-view="ebeveyn"] .k{display:none!important}
+
+.wrap{width:min(1120px,100% - 2.5rem);margin-inline:auto}
+
+/* Üst bar */
+header{padding:1.1rem 0}
+header .wrap{display:flex;align-items:center;justify-content:space-between;gap:1rem;flex-wrap:wrap}
+.logo{font-family:"Caveat Brush";font-size:2.4rem;text-decoration:none;display:flex;align-items:center;gap:.5rem}
+.logo svg{width:44px;height:44px}
+.switch{
+  display:flex;background:var(--card);border:2.5px solid var(--line);
+  border-radius:999px;padding:4px;gap:4px;
+}
+.switch button{
+  font:700 .95rem "Atkinson Hyperlegible";color:var(--ink);background:none;border:0;
+  padding:.55rem 1rem;border-radius:999px;cursor:pointer;
+}
+.switch button[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* Hero */
+.hero{padding:2rem 0 4rem}
+.hero .wrap{display:grid;grid-template-columns:1.05fr 1fr;gap:3rem;align-items:center}
+.hero h1{font-size:clamp(3.4rem,8vw,6.4rem);letter-spacing:-.01em}
+html[data-view="ebeveyn"] .hero h1{font-size:clamp(2.8rem,6vw,5rem)}
+.hero p{font-size:1.25rem;max-width:34ch;margin:1.2rem 0 2rem;color:var(--soft)}
+.btn{
+  display:inline-flex;align-items:center;gap:.6rem;
+  font:700 1.1rem "Atkinson Hyperlegible";text-decoration:none;cursor:pointer;
+  background:var(--red);color:#fff;border:2.5px solid var(--line);
+  padding:.9rem 1.5rem;border-radius:16px 22px 14px 20px;
+  box-shadow:4px 5px 0 var(--line);transition:transform .15s, box-shadow .15s;
+}
+.btn:hover{transform:translate(-2px,-2px);box-shadow:6px 7px 0 var(--line)}
+.btn:active{transform:translate(2px,3px);box-shadow:1px 1px 0 var(--line)}
+html[data-view="ebeveyn"] .btn{background:var(--green);border-radius:12px;box-shadow:none;border-color:transparent}
+html[data-view="ebeveyn"] .btn:hover{transform:none;filter:brightness(1.06)}
+.btn.ghost{background:transparent;color:var(--ink)}
+
+/* Çizim ev */
+.house-box{position:relative}
+.house{width:100%;overflow:visible}
+.house .stroke{fill:none;stroke:var(--line);stroke-width:5;stroke-linecap:round;stroke-linejoin:round}
+.house .wall{fill:var(--card)}
+.house .roof{fill:var(--red)}
+.house .sun{fill:var(--sun)}
+.house .grass{fill:var(--green)}
+.house .win{fill:var(--sky)}
+.house .glow{fill:var(--light)}
+.house .doorleaf{fill:var(--door);transform-origin:236px 0;transform-box:view-box;transition:transform .7s cubic-bezier(.3,1.4,.5,1)}
+.house.open .doorleaf{transform:scaleX(.12)}
+html[data-view="ebeveyn"] .house .doorleaf{transform:scaleX(.55)}
+.house .sunrays{transform-origin:330px 70px;animation:spin 24s linear infinite}
+#door{cursor:pointer}
+@keyframes spin{to{transform:rotate(360deg)}}
+.star{
+  position:absolute;pointer-events:none;font-size:1.6rem;line-height:1;
+  animation:pop 1.1s ease-out forwards;
+}
+@keyframes pop{
+  0%{transform:translate(0,0) scale(.3);opacity:1}
+  100%{transform:translate(var(--x),var(--y)) scale(1.2) rotate(var(--r));opacity:0}
+}
+.doodle-note{
+  position:absolute;right:2%;top:-1rem;transform:rotate(6deg);
+  font-family:"Caveat Brush";font-size:1.5rem;color:var(--red)
+}
+
+/* Bölümler */
+section{padding:4.5rem 0}
+.sec-head{max-width:40rem;margin-bottom:2.5rem}
+.sec-head h2{font-size:clamp(2.6rem,5vw,3.8rem)}
+.sec-head p{color:var(--soft);font-size:1.15rem;margin-top:.6rem}
+
+/* Odalar */
+.rooms{display:grid;grid-template-columns:repeat(4,1fr);gap:1.5rem;list-style:none}
+.room svg{width:84px;height:84px;margin-bottom:.8rem}
+.room svg .stroke{fill:none;stroke:var(--line);stroke-width:4;stroke-linecap:round;stroke-linejoin:round}
+.room h3{font-size:2rem;margin-bottom:.3rem}
+.room p{color:var(--soft)}
+html[data-view="cocuk"] .room{
+  background:var(--card);border:2.5px solid var(--line);padding:1.4rem;
+  border-radius:22px 14px 26px 16px;
+}
+html[data-view="cocuk"] .room:nth-child(odd){transform:rotate(-1.2deg)}
+html[data-view="cocuk"] .room:nth-child(even){transform:rotate(1deg)}
+html[data-view="ebeveyn"] .room{border-top:3px solid var(--sky);padding-top:1.2rem}
+.tag{display:inline-block;margin-top:.8rem;font-size:.9rem;font-weight:700;color:var(--green)}
+
+/* Güven / kurallar */
+.trust{background:var(--card)}
+.trust .wrap{display:grid;grid-template-columns:1fr 1.4fr;gap:3rem;align-items:start}
+.facts{list-style:none;display:grid;gap:1.4rem}
+.facts li{display:grid;grid-template-columns:2.6rem 1fr;gap:1rem;align-items:start}
+.facts .ico{font-size:1.6rem;line-height:1}
+.facts strong{display:block;font-size:1.15rem}
+.facts span{color:var(--soft)}
+.rules{list-style:none;display:grid;gap:1rem}
+.rules li{
+  font-family:"Caveat Brush";font-size:clamp(1.7rem,3.4vw,2.4rem);line-height:1.15;
+  padding-left:2.4rem;position:relative
+}
+.rules li::before{content:"✿";position:absolute;left:0;color:var(--red)}
+.rules li:nth-child(2)::before{color:var(--green)}
+.rules li:nth-child(3)::before{color:var(--sky)}
+.rules li:nth-child(4)::before{color:var(--sun)}
+
+/* Boy çizgisi */
+.grow .wrap{display:grid;grid-template-columns:auto 1fr;gap:4rem;align-items:center}
+.frame{
+  position:relative;width:150px;height:440px;
+  background:var(--card);border:3px solid var(--line);border-bottom:none;
+  border-radius:6px 6px 0 0;
+}
+.mark{position:absolute;left:0;display:flex;align-items:center;gap:.5rem;width:100%}
+.mark::before{content:"";width:58%;height:3px;background:var(--line);border-radius:2px;transform:rotate(-1.5deg)}
+.mark span{font-family:"Caveat Brush";font-size:1.4rem;white-space:nowrap}
+.mark:nth-child(odd)::before{width:48%;transform:rotate(1.5deg)}
+.grow h2{font-size:clamp(2.8rem,6vw,4.6rem)}
+.grow p{font-size:1.25rem;color:var(--soft);max-width:36ch;margin-top:1rem}
+
+/* Doğum günü */
+.party .wrap{
+  border:3px dashed var(--line);border-radius:28px;padding:clamp(1.8rem,4vw,3.2rem);
+  display:grid;grid-template-columns:1.3fr 1fr;gap:2rem;align-items:center
+}
+.party h2{font-size:clamp(2.6rem,5vw,3.8rem)}
+.party p{color:var(--soft);font-size:1.15rem;margin:.8rem 0 1.6rem;max-width:40ch}
+.cake{font-size:clamp(5rem,12vw,8rem);text-align:center;line-height:1}
+
+/* Ziyaret */
+.visit .wrap{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem}
+.visit h2{grid-column:1/-1;font-size:clamp(2.6rem,5vw,3.8rem)}
+.visit h3{font-size:1.8rem;margin-bottom:.3rem}
+.visit p{color:var(--soft)}
+.ph{background:color-mix(in srgb,var(--sun) 40%,transparent);padding:0 .3em;border-radius:4px}
+
+footer{padding:2.5rem 0 3rem;color:var(--soft);font-size:.95rem}
+footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:1rem}
+
+@media (max-width:900px){
+  .hero .wrap,.trust .wrap,.party .wrap{grid-template-columns:1fr}
+  .rooms{grid-template-columns:repeat(2,1fr)}
+  .visit .wrap{grid-template-columns:1fr}
+  .grow .wrap{grid-template-columns:1fr;gap:2rem}
+  .frame{height:340px;order:2}
+  .cake{order:-1}
+}
+@media (max-width:560px){
+  .rooms{grid-template-columns:1fr}
+  html[data-view="cocuk"] .room{transform:none!important}
+  .switch button{padding:.5rem .75rem;font-size:.85rem}
+}
+@media (prefers-reduced-motion:reduce){
+  *{animation:none!important;transition:none!important}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <div class="wrap">
+    <a class="logo" href="#" aria-label="Kuka Oyun Evi ana sayfa">
+      <svg viewBox="0 0 48 48" aria-hidden="true"><path d="M6 24 24 8l18 16" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/><path d="M11 21v20h26V21" fill="none" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="24" cy="31" r="4" fill="var(--red)"/></svg>
+      Kuka
+    </a>
+    <div class="switch" role="group" aria-label="Siteyi kimin gözüyle görmek istersin?">
+      <button type="button" data-set="cocuk" aria-pressed="true">Çocuk gözüyle</button>
+      <button type="button" data-set="ebeveyn" aria-pressed="false">Ebeveyn gözüyle</button>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- HERO -->
+  <section class="hero" style="padding-top:1rem">
+    <div class="wrap">
+      <div>
+        <h1 class="k">Kapıyı çal!</h1>
+        <h1 class="p">Onlar gönüllerince oynasın, siz içiniz rahat bir nefes alın.</h1>
+        <p class="k">İçeride top havuzu, boya kalemleri, masal çadırı ve yeni arkadaşlar seni bekliyor.</p>
+        <p class="p">Kuka Oyun Evi'nde çocuğunuz güvenle oynar, keşfeder, arkadaş edinir. Siz de gözünüz arkada kalmadan kahvenizi yudumlarsınız.</p>
+        <button class="btn k" type="button" id="knock">Kapıyı çal</button>
+        <a class="btn p" href="https://wa.me/905000000000" target="_blank" rel="noopener">WhatsApp'tan bilgi al</a>
+      </div>
+
+      <div class="house-box" id="houseBox">
+        <span class="doodle-note k" aria-hidden="true">kapıya dokun!</span>
+        <svg class="house" id="house" viewBox="0 0 420 380" role="img" aria-label="Çocuk çizimi gibi bir ev, kapısı açılıyor">
+          <g class="sunrays">
+            <path class="stroke" d="M330 20v-14M330 134v-14M280 70h-14M394 70h-14M295 35l-10-10M375 115l10 10M365 35l10-10M295 105l-10 10"/>
+          </g>
+          <circle class="sun stroke" cx="330" cy="70" r="30"/>
+          <path class="grass stroke" d="M10 350c40-12 80 8 130-2s90 6 140-4 90 10 130 0v26H10z"/>
+          <path class="wall stroke" d="M78 172 L80 348 L352 346 L350 170"/>
+          <path class="roof stroke" d="M50 180 C100 130 160 80 214 42 C270 82 330 130 382 178 Z"/>
+          <rect class="win stroke" x="108" y="208" width="66" height="60" rx="6"/>
+          <path class="stroke" d="M141 210v56M110 238h62"/>
+          <rect class="glow" x="236" y="236" width="76" height="110" rx="4"/>
+          <g id="door" tabindex="0" role="button" aria-label="Kapıyı aç">
+            <rect class="doorleaf stroke" x="236" y="236" width="76" height="110" rx="4"/>
+          </g>
+          <path class="stroke" d="M236 236h76v110"/>
+          <path class="stroke" d="M150 92 v-34 h24 v18"/>
+          <path class="stroke" d="M58 340c4-14 10-24 12-34M64 342c8-10 12-18 18-24" />
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <!-- ODALAR -->
+  <section>
+    <div class="wrap">
+      <div class="sec-head">
+        <h2 class="k">İçeride neler var?</h2>
+        <h2 class="p">Her köşe bir oyun, her oyun bir gelişim adımı</h2>
+        <p class="p">Oyun, çocukların en doğal öğrenme yolu. Alanlarımızı bunu düşünerek kurguladık.</p>
+      </div>
+      <ul class="rooms">
+        <li class="room">
+          <svg viewBox="0 0 84 84" aria-hidden="true"><path class="stroke" d="M8 50h68v24H8z"/><circle cx="24" cy="48" r="9" fill="var(--red)" class="stroke"/><circle cx="44" cy="44" r="9" fill="var(--sky)" class="stroke"/><circle cx="62" cy="48" r="9" fill="var(--sun)" class="stroke"/><circle cx="34" cy="30" r="8" fill="var(--green)" class="stroke"/></svg>
+          <h3>Top havuzu</h3>
+          <p class="k">Rengârenk topların içine dal, kaybol, sonra kahkahayla dışarı çık!</p>
+          <p class="p">Denge, koordinasyon ve bol enerji atmak için yumuşak zeminli, güvenli bir alan.</p>
+          <span class="tag p">Kaba motor gelişimi</span>
+        </li>
+        <li class="room">
+          <svg viewBox="0 0 84 84" aria-hidden="true"><rect class="stroke" x="10" y="14" width="64" height="48" rx="4" fill="var(--card)"/><path class="stroke" d="M20 48c8-16 16-16 22-4s14 10 22-10" stroke="var(--red)"/><path class="stroke" d="M28 62l-8 14M56 62l8 14"/></svg>
+          <h3>Boyama masası</h3>
+          <p class="k">Duvara değil, kocaman kâğıtlara! İstediğin kadar boya, istediğin renge.</p>
+          <p class="p">Kendini ifade etmenin ve ince motor becerilerin geliştiği, yaşa uygun malzemelerle donatılmış bir köşe.</p>
+          <span class="tag p">İnce motor ve yaratıcılık</span>
+        </li>
+        <li class="room">
+          <svg viewBox="0 0 84 84" aria-hidden="true"><path class="stroke" d="M42 10 10 74h64z" fill="var(--sun)"/><path class="stroke" d="M42 10v64M30 74c4-14 8-22 12-26 4 4 8 12 12 26" fill="var(--card)"/></svg>
+          <h3>Masal çadırı</h3>
+          <p class="k">Yastıklara uzan, masal dinle, kocaman ejderhalarla tanış.</p>
+          <p class="p">Dil gelişimini destekleyen ve yorulan minikleri sakinleştiren sessiz, loş bir alan.</p>
+          <span class="tag p">Dil ve duygu düzenleme</span>
+        </li>
+        <li class="room">
+          <svg viewBox="0 0 84 84" aria-hidden="true"><path class="stroke" d="M14 40h56v8c0 14-12 24-28 24S14 62 14 48z" fill="var(--red)"/><path class="stroke" d="M30 30c0-8 6-8 6-16M46 30c0-8 6-8 6-16"/></svg>
+          <h3>Evcilik mutfağı</h3>
+          <p class="k">Çorba pişir, pasta yap, misafirlerini en güzel tabaklarla ağırla.</p>
+          <p class="p">Rol yapma oyunlarıyla paylaşmayı, sırayla konuşmayı ve iş birliğini öğrendikleri yer.</p>
+          <span class="tag p">Sosyal beceriler</span>
+        </li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- GÜVEN / KURALLAR -->
+  <section class="trust">
+    <div class="wrap">
+      <div class="sec-head" style="margin:0">
+        <h2 class="k">Kuka'nın kuralları</h2>
+        <h2 class="p">Sizin için önemli olan her şey</h2>
+        <p class="p">Bir anne babanın aklından geçen soruların cevabı, kapıdan girmeden önce burada.</p>
+      </div>
+      <ul class="rules k">
+        <li>Ayakkabılar kapıda kalır, kahkahalar içeri girer.</li>
+        <li>Sıra bekleyen iki kat eğlenir.</li>
+        <li>Oyuncaklar hepimizin, toplamak da hepimizin.</li>
+        <li>Yorulunca su iç, sonra yine oyna!</li>
+      </ul>
+      <ul class="facts p">
+        <li><span class="ico" aria-hidden="true">🧑‍🏫</span><div><strong>Deneyimli ekip</strong><span>Çocuklarınız oyun boyunca <span class="ph">[eğitmen / oyun ablası]</span> gözetiminde.</span></div></li>
+        <li><span class="ico" aria-hidden="true">🧼</span><div><strong>Her gün temizlik</strong><span>Oyuncaklar ve oyun alanları <span class="ph">[temizlik sıklığı]</span> dezenfekte edilir.</span></div></li>
+        <li><span class="ico" aria-hidden="true">🚪</span><div><strong>Kontrollü giriş çıkış</strong><span>Çocuğunuzu yalnızca sizin belirlediğiniz kişiye teslim ederiz.</span></div></li>
+        <li><span class="ico" aria-hidden="true">🧸</span><div><strong>Yaşa uygun alanlar</strong><span><span class="ph">[X–Y yaş]</span> arası çocuklar için tasarlanmış, yumuşak ve köşesiz bir ortam.</span></div></li>
+      </ul>
+    </div>
+  </section>
+
+  <!-- BOY ÇİZGİSİ -->
+  <section class="grow">
+    <div class="wrap">
+      <div class="frame" aria-hidden="true">
+        <div class="mark" style="bottom:22%"><span>2 yaş</span></div>
+        <div class="mark" style="bottom:38%"><span>3 yaş</span></div>
+        <div class="mark" style="bottom:52%"><span>4 yaş</span></div>
+        <div class="mark" style="bottom:64%"><span>5 yaş</span></div>
+        <div class="mark" style="bottom:75%"><span>6 yaş</span></div>
+      </div>
+      <div>
+        <h2 class="k">Ne kadar büyüdün?</h2>
+        <h2 class="p">Bu yıllar çok çabuk geçiyor.</h2>
+        <p class="k">Her geldiğinde biraz daha uzuyorsun. Bir gün o kaydırağa tek başına tırmanacaksın, bak görürsün!</p>
+        <p class="p">Kapı pervazına çizilen her çizgi bir yaz, bir kahkaha, bir ilk arkadaşlık demek. Kuka'da biriktirdikleri anılar, büyüdüklerinde gülümseyerek hatırlayacakları cinsten olsun.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- DOĞUM GÜNÜ -->
+  <section class="party">
+    <div class="wrap">
+      <div>
+        <h2 class="k">Doğum gününü Kuka'da kutla!</h2>
+        <h2 class="p">Doğum günleri ve özel günler</h2>
+        <p class="k">Balonlar, pasta, en sevdiğin arkadaşların ve bütün oyun evi sadece sizin!</p>
+        <p class="p">Süsleme, oyun ve organizasyon bizden; mumları üflerken fotoğraf çekmek sizden. Paketler ve uygun tarihler için bize yazın.</p>
+        <a class="btn" href="https://wa.me/905000000000" target="_blank" rel="noopener">Doğum günü için yaz</a>
+      </div>
+      <div class="cake" aria-hidden="true">🎂</div>
+    </div>
+  </section>
+
+  <!-- ZİYARET -->
+  <section class="visit">
+    <div class="wrap">
+      <h2 class="k">Gel, oynayalım!</h2>
+      <h2 class="p">Bizi ziyaret edin</h2>
+      <div>
+        <h3>Adres</h3>
+        <p><span class="ph">[Mahalle, sokak, ilçe / şehir]</span></p>
+      </div>
+      <div>
+        <h3>Saatler</h3>
+        <p><span class="ph">[Hafta içi 10:00–20:00]</span><br><span class="ph">[Hafta sonu 10:00–21:00]</span></p>
+      </div>
+      <div>
+        <h3>Bize ulaşın</h3>
+        <p><a href="https://wa.me/905000000000" target="_blank" rel="noopener">WhatsApp: <span class="ph">[0500 000 00 00]</span></a><br>
+        <a href="https://www.instagram.com/kukaoyunevi" target="_blank" rel="noopener">Instagram: @kukaoyunevi</a></p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span class="hand" style="font-size:1.6rem">Kuka Oyun Evi</span>
+    <span>Büyümek bu kadar eğlenceli olmalı.</span>
+  </div>
+</footer>
+
+<script>
+  // Görünüm değiştirme
+  const root = document.documentElement;
+  document.querySelectorAll('.switch button').forEach(b => {
+    b.addEventListener('click', () => {
+      root.dataset.view = b.dataset.set;
+      document.querySelectorAll('.switch button').forEach(x =>
+        x.setAttribute('aria-pressed', x === b ? 'true' : 'false'));
+    });
+  });
+
+  // Kapı ve yıldızlar
+  const house = document.getElementById('house');
+  const box = document.getElementById('houseBox');
+  const door = document.getElementById('door');
+  const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const icons = ['⭐','🎈','✨','💛','🧸','🌈'];
+
+  function burst(){
+    if (reduce) return;
+    const r = box.getBoundingClientRect();
+    const sx = r.width * 0.65, sy = r.height * 0.78;
+    for (let i = 0; i < 16; i++){
+      const s = document.createElement('span');
+      s.className = 'star';
+      s.textContent = icons[i % icons.length];
+      const a = Math.random() * Math.PI - Math.PI; // yukarı yönlü
+      const d = 90 + Math.random() * 140;
+      s.style.left = sx + 'px'; s.style.top = sy + 'px';
+      s.style.setProperty('--x', Math.cos(a) * d + 'px');
+      s.style.setProperty('--y', Math.sin(a) * d + 'px');
+      s.style.setProperty('--r', (Math.random() * 120 - 60) + 'deg');
+      box.appendChild(s);
+      setTimeout(() => s.remove(), 1200);
+    }
+  }
+  function toggleDoor(){
+    const open = house.classList.toggle('open');
+    door.setAttribute('aria-label', open ? 'Kapıyı kapat' : 'Kapıyı aç');
+    if (open) burst();
+  }
+  door.addEventListener('click', toggleDoor);
+  door.addEventListener('keydown', e => {
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); toggleDoor(); }
+  });
+  document.getElementById('knock').addEventListener('click', toggleDoor);
+</script>
+</body>
+</html>
